@@ -15,6 +15,7 @@ public class Person {
             message = "Enter the date in format dd/mm/yyyy")
     private String dateOfBirth;
 
+    public Person(){}
     public Person(int id, String fullName, String dateOfBirth) {
         this.id = id;
         this.fullName = fullName;

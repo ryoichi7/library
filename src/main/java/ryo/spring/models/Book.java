@@ -5,6 +5,7 @@ import jakarta.validation.constraints.*;
 public class Book {
 
     private int id;
+    private int personId;
     @NotEmpty(message = "Name should not be empty")
     @Size(min = 2, max = 50,
             message = "Name should be between 2 and 50 characters")
@@ -19,8 +20,10 @@ public class Book {
     @Max(value = 2023, message = "Library does not contain books with greater than a 2023 release year")
     private int year;
 
-    public Book(int id, String name, String author, int year) {
+    public Book(){}
+    public Book(int id, int personId, String name, String author, int year) {
         this.id = id;
+        this.personId = personId;
         this.name = name;
         this.author = author;
         this.year = year;
@@ -56,5 +59,13 @@ public class Book {
 
     public void setYear(int year) {
         this.year = year;
+    }
+
+    public int getPersonId() {
+        return personId;
+    }
+
+    public void setPersonId(int personId) {
+        this.personId = personId;
     }
 }
