@@ -7,18 +7,28 @@
 <body>
 <p th:text="${person.getFullName() + ', ' + person.getDateOfBirth()}">Value</p>
 <hr/>
-<h3 th:unless="${books.isEmpty()}">Books list:</h3>
-<div th:each="book : ${books}" th:unless="${books.isEmpty()}">
-    <a th:text="${book.getName() + ', ' + book.getAuthor() + ', ' + book.getYear()}">user</a>
+
+<div th:unless="${books.isEmpty()}">
+    <h3>Books list:</h3>
+    <div th:each="book : ${books}" >
+        <a th:text="${book.getName() + ', ' + book.getAuthor() + ', ' + book.getYear()}">user</a>
+    </div>
 </div>
+
 <p th:if="${books.isEmpty()}">This person doesn't hold any book</p>
 <hr/>
 
-<a th:href="@{/people/{id}/edit(id=${person.getId()})}">Edit</a>
-<br/>
+<div>
+    <form th:method="GET" th:action="@{/people/{id}/edit(id=${person.getId()})}">
+        <input type="submit" value="Edit"/>
+    </form>
+    <form th:method="DELETE" th:action="@{/people/{id}(id=${person.getId()})}">
+        <input type="submit" value="Delete person"/>
+    </form>
+    <form th:method="GET" th:action="@{/people}">
+        <input type="submit" value="Back to people list"/>
+    </form>
+</div>
 
-<form th:method="DELETE" th:action="@{/people/{id}(id=${person.getId()})}">
-    <input type="submit" value="Delete person"/>
-</form>
 </body>
 </html>

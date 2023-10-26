@@ -30,7 +30,7 @@ public class PersonValidator implements Validator {
 
         Optional<Person> old = personDAO.show(person.getFullName());
 
-        if (old.isPresent() && !old.get().getFullName().equals(person.getFullName())){
+        if (old.isPresent() && old.get().getId() != person.getId()){
             errors.rejectValue("fullName", "", "Person with this full name already exists");
         }
     }

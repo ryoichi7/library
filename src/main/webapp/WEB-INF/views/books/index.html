@@ -8,15 +8,15 @@
 
 <h1>Books list</h1>
 <div th:each="book : ${books}">
-    <a th:href="@{/books/{id}(id=${book.getId()})}" th:text="${book.getName()  + ', ' + book.getAuthor()}">Book</a>
+    <a th:href="@{/books/{id}(id=${book.getId()})}" th:text="${book.getName()  + ', ' + book.getAuthor() + ', ' + book.getYear()}">Book</a>
 </div>
 
 <br/>
 <hr/>
 
-<a href="/books/new">Create new book</a>
-<br/>
-<hr/>
+<form th:method="GET" th:action="@{/books/new}">
+    <input type="submit" value="Create new book"/>
+</form>
 <form th:method="GET" th:action="@{/homePage}">
     <input type="submit" value="Back to home page"/>
 </form>

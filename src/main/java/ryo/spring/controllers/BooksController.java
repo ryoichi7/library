@@ -8,7 +8,10 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import ryo.spring.dao.BookDAO;
+import ryo.spring.dao.PersonDAO;
 import ryo.spring.models.Book;
+import ryo.spring.models.Person;
+import ryo.spring.models.Result;
 
 
 @Controller
@@ -16,9 +19,11 @@ import ryo.spring.models.Book;
 public class BooksController {
 
     private final BookDAO bookDAO;
+    private final PersonDAO personDAO;
     @Autowired
-    public BooksController(BookDAO bookDAO) {
+    public BooksController(BookDAO bookDAO, PersonDAO personDAO) {
         this.bookDAO = bookDAO;
+        this.personDAO = personDAO;
     }
 
     @GetMapping
@@ -29,7 +34,13 @@ public class BooksController {
 
     @GetMapping("/{id}")
     public String show(@PathVariable("id") int id, Model model){
-        model.addAttribute("book", bookDAO.show(id));
+        Result result = bookDAO.show(id);
+        model.addAttribute("book", result.getBook());
+        model.addAttribute("person", result.getPerson());
+        
+        if (result.getBook().getPersonId() == 0)
+            model.addAttribute("people", personDAO.index());
+
         return "books/show";
     }
 
@@ -50,7 +61,7 @@ public class BooksController {
 
     @GetMapping("/{id}/edit")
     public String edit(@PathVariable("id") int id, Model model){
-        model.addAttribute("book", bookDAO.show(id));
+        model.addAttribute("book", bookDAO.show(id).getBook());
         return "books/edit";
     }
     @PatchMapping("/{id}")
@@ -63,6 +74,18 @@ public class BooksController {
         }
         bookDAO.update(id, book);
         return "redirect:/books";
+    }
+
+    @PatchMapping("{id}/detach")
+    public String detach(@PathVariable("id") int id){
+        bookDAO.detach(id);
+        return "redirect:/books/{id}";
+    }
+
+    @PatchMapping("{id}/attach")
+    public String attach(@ModelAttribute("person") Person person, @PathVariable("id") int id){
+        bookDAO.attach(id, person.getId());
+        return "redirect:/books/{id}";
     }
 
     @DeleteMapping("/{id}")
