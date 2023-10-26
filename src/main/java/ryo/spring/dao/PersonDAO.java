@@ -4,9 +4,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
+import ryo.spring.models.Book;
 import ryo.spring.models.Person;
+import ryo.spring.models.Result;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Component
@@ -25,9 +29,25 @@ public class PersonDAO {
         return jdbcTemplate.query("SELECT * FROM Person where fullName = ?",
                 new Object[]{fullName}, new BeanPropertyRowMapper<>(Person.class)).stream().findAny();
     }
-        public Person show(int id){ //READ, Select person with specified id from table
-        return jdbcTemplate.query("SELECT * FROM Person WHERE id = ?", new Object[]{id}
-            , new BeanPropertyRowMapper<>(Person.class)).stream().findAny().orElse(null);
+        public List<Result> show(int id){ //READ, Select person with specified id from table
+        return jdbcTemplate.query("SELECT * FROM Person LEFT JOIN Book ON Person.id = book.personId WHERE Person.id = ?", new Object[]{id},
+                (rs, num) -> {
+                    Person person = new Person();
+                    Book book = new Book();
+
+                    person.setId(rs.getInt(1));
+                    person.setFullName(rs.getString(2));
+                    person.setDateOfBirth(rs.getString(3));
+
+
+                    book.setId(rs.getInt(4));
+                    book.setPersonId(rs.getInt(5));
+                    book.setName(rs.getString(6));
+                    book.setAuthor(rs.getString(7));
+                    book.setYear(rs.getInt(8));
+
+                return new Result(person, book);
+                });
     }
 
     public void save(Person person){ //CREATE, Insert person in table

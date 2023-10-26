@@ -10,6 +10,10 @@ import ryo.spring.dao.BookDAO;
 import ryo.spring.dao.PersonDAO;
 import ryo.spring.models.Book;
 import ryo.spring.models.Person;
+import ryo.spring.models.Result;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Controller
 @RequestMapping("/people")
@@ -30,7 +34,14 @@ public class PeopleController {
 
     @GetMapping("/{id}")
     public String show(@PathVariable("id") int id, Model model){
-        model.addAttribute("person", personDAO.show(id));
+        List<Result> resultList = personDAO.show(id);
+        List<Book> books = new ArrayList<>();
+        for (Result result : resultList){
+            Book temp = result.getBook();
+            if (temp.getId() != 0) books.add(temp);
+        }
+        model.addAttribute("person", resultList.get(0).getPerson());
+        model.addAttribute("books", books);
         return "people/show";
     }
 
