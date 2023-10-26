@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Library</title>
+</head>
+<body>
+<h2>Library home page</h2>
+
+<form th:method="GET" th:action="@{/people}">
+    <input type="submit" value="People list"/>
+</form>
+
+<br/>
+
+<form th:method="GET" th:action="@{/books}">
+    <input type="submit" value="Books list"/>
+</form>
+
+</body>
+</html>

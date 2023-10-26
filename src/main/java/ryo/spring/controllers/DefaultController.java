@@ -7,6 +7,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class DefaultController {
     @GetMapping
     public String redirect(){
-        return "redirect:/people";
+        return "redirect:/homePage";
+    }
+
+    @GetMapping("/homePage")
+    public String home(){
+        return "default/homePage";
     }
 }

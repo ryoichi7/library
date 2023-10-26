@@ -6,13 +6,13 @@
 </head>
 <body>
 <p th:text="${person.getFullName() + ', ' + person.getDateOfBirth()}">Value</p>
-
+<hr/>
 <h3 th:unless="${books.isEmpty()}">Books list:</h3>
 <div th:each="book : ${books}" th:unless="${books.isEmpty()}">
     <a th:text="${book.getName() + ', ' + book.getAuthor() + ', ' + book.getYear()}">user</a>
 </div>
 <p th:if="${books.isEmpty()}">This person doesn't hold any book</p>
-<br/>
+<hr/>
 
 <a th:href="@{/people/{id}/edit(id=${person.getId()})}">Edit</a>
 <br/>

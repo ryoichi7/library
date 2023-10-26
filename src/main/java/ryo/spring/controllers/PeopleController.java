@@ -11,6 +11,7 @@ import ryo.spring.dao.PersonDAO;
 import ryo.spring.models.Book;
 import ryo.spring.models.Person;
 import ryo.spring.models.Result;
+import ryo.spring.util.PersonValidator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,9 +22,12 @@ public class PeopleController {
 
     private final PersonDAO personDAO;
 
+    private final PersonValidator personValidator;
+
     @Autowired
-    public PeopleController(PersonDAO personDAO, BookDAO bookDAO) {
+    public PeopleController(PersonDAO personDAO, BookDAO bookDAO, PersonValidator personValidator) {
         this.personDAO = personDAO;
+        this.personValidator = personValidator;
     }
 
     @GetMapping()
@@ -53,6 +57,9 @@ public class PeopleController {
     @PostMapping()
     public String create(@ModelAttribute("person") @Valid Person person,
                          BindingResult bindingResult){
+
+        personValidator.validate(person, bindingResult);
+
         if (bindingResult.hasErrors()){
             return "people/new";
         }
@@ -62,13 +69,15 @@ public class PeopleController {
 
     @GetMapping("/{id}/edit")
     public String edit(@PathVariable("id") int id, Model model){
-        model.addAttribute("person", personDAO.show(id));
+        model.addAttribute("person", personDAO.show(id).get(0).getPerson());
         return "people/edit";
     }
     @PatchMapping("/{id}")
     public String update(@ModelAttribute("person") @Valid Person person,
                          BindingResult bindingResult,
                          @PathVariable("id") int id){
+
+        personValidator.validate(person, bindingResult);
 
         if (bindingResult.hasErrors()){
             return "people/edit";
