@@ -28,8 +28,8 @@ public class BooksService {
             return booksRepository.findAll(PageRequest.of(page, booksPerPage, Sort.by("year"))).getContent();
         if (page >= 0 && booksPerPage != Integer.MAX_VALUE)
             return booksRepository.findAll(PageRequest.of(page, booksPerPage)).getContent();
-        else
-            return booksRepository.findAll();
+        if (sorted) return booksRepository.findAll(Sort.by("year"));
+        else return booksRepository.findAll();
     }
 
     public Book findOne(int id){
