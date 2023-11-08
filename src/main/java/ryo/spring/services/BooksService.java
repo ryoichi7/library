@@ -10,6 +10,7 @@ import ryo.spring.models.Book;
 import ryo.spring.models.Person;
 import ryo.spring.repositories.BooksRepository;
 
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -59,11 +60,19 @@ public class BooksService {
 
     @Transactional
     public void detach(int id) {
-        booksRepository.findById(id).ifPresent(book -> book.setOwner(null));
+
+        booksRepository.findById(id).ifPresent(book -> { //needs to be replaced by 1 query
+            book.setOwner(null);
+            book.setTakenAt(null);
+        });
     }
 
     @Transactional
     public void attach(int id, Person person) {
-        booksRepository.findById(id).ifPresent(book -> book.setOwner(person));
+
+        booksRepository.findById(id).ifPresent(book -> { //needs to be replaced by 1 query
+            book.setOwner(person);
+            book.setTakenAt(new Date());
+        });
     }
 }

@@ -5,9 +5,11 @@ import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ryo.spring.models.Book;
 import ryo.spring.models.Person;
 import ryo.spring.repositories.PeopleRepository;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,8 +29,15 @@ public class PeopleService {
     }
 
     public Person findOne(int id){
-        Person person = peopleRepository.findById(id).orElse(null); //n + 1 issue
-        if (person != null) Hibernate.initialize(person.getBooks());
+        Person person = peopleRepository.findById(id).orElse(null); //n + 1 queries issue
+        if (person != null) {
+            Hibernate.initialize(person.getBooks());
+            for (Book book : person.getBooks()){
+                Date currentTime = new Date();
+                currentTime.setTime(currentTime.getTime() - 864000);
+                book.setExpired(currentTime.after(book.getTakenAt()));
+            }
+        }
         return person;
     }
 

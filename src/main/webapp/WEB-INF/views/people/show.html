@@ -11,7 +11,9 @@
 <div th:unless="${books.isEmpty()}">
     <h3>Books list:</h3>
     <div th:each="book : ${books}" >
-        <a th:text="${book.getName() + ', ' + book.getAuthor() + ', ' + book.getYear()}">user</a>
+        <a th:style="${book.isExpired()}? 'color:red' : 'color:black'" th:text="${book.getName() + ', ' + book.getAuthor() + ', ' + book.getYear()}">user</a>
+        <br/>
+        <a th:if="${book.isExpired()}" th:text="${'The book rent has expired, takeout date is - ' + book.getTakenAt().toLocaleString()}">Text</a>
     </div>
 </div>
 
