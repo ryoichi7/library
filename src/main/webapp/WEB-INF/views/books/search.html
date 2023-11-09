@@ -6,29 +6,30 @@
 </head>
 <body>
 <div>
-    <form method="get" action="/books/search" th:object="${book}">
+    <form method="post" action="/books/search">
         <label for="search">Enter the book's name to search</label>
-        <input type="text" th:field="*{name}" id="search">
+        <input type="text" name="query" id="search">
         <input type="submit" value="Search!">
     </form>
 </div>
 <hr/>
 
-<div th:unless="${book.getId() > 0}">
+<div th:if="${books.isEmpty()}">
     <p>There is no book with such name</p>
     <hr/>
 </div>
 
-<div th:if="${book.getId() > 0}">
-    <p th:text="${book.getName() + ', ' + book.getAuthor() + ', ' + book.getYear()}">Value</p>
-    <div th:unless="${book.getOwner()}">
-        <p>This book is free now</p>
-        <hr/>
-    </div>
-
-    <div th:if="${book.getOwner()}">
-        <p th:text="${'The book is currently attached to ' + person.getFullName()}">text</p>
-        <hr/>
+<div th:unless="${books.isEmpty()}">
+    <div th:each="book : ${books}">
+        <p th:text="${book.getName() + ', ' + book.getAuthor() + ', ' + book.getYear()}">Value</p>
+        <div th:unless="${book.getOwner()}">
+            <p>This book is free now</p>
+            <hr/>
+        </div>
+        <div th:if="${book.getOwner()}">
+            <p th:text="${'The book is currently attached to ' + book.getOwner().getFullName()}">text</p>
+            <hr/>
+        </div>
     </div>
 </div>
 

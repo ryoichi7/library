@@ -10,11 +10,12 @@ import ryo.spring.models.Book;
 import ryo.spring.models.Person;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface BooksRepository extends JpaRepository<Book, Integer> {
-    Optional<Book> findByNameContains(String pattern);
+    List<Book> findByNameContains(String pattern);
     @Modifying
     @Transactional
     @Query(value = "UPDATE Book b SET b.owner=:owner, b.takenAt=:takenAt WHERE b.id=:id")

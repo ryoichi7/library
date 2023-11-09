@@ -10,6 +10,7 @@ import ryo.spring.models.Book;
 import ryo.spring.models.Person;
 import ryo.spring.repositories.BooksRepository;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -37,14 +38,15 @@ public class BooksService {
         return booksRepository.findById(id).orElse(null);
     }
 
-    public Book findByName(String pattern){
-        if (pattern.isEmpty()) return null;
-        return booksRepository.findByNameContains(pattern).orElse(null);
+    public List<Book> findByName(String pattern){
+        if (pattern.isEmpty()) return Collections.emptyList();
+        return booksRepository.findByNameContains(pattern);
     }
 
     @Transactional
     public void update(int id, Book updatedBook){
         updatedBook.setId(id);
+        updatedBook.setOwner(booksRepository.findById(id).get().getOwner());
         booksRepository.save(updatedBook);
     }
 

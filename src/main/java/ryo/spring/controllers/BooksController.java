@@ -51,18 +51,13 @@ public class BooksController {
     }
 
     @GetMapping("/search")
-    public String searchBook(@ModelAttribute(name = "book") Book book, Model model){
-        if (book.getName() == null){
-            return "books/search";
-        }
-        book = booksService.findByName(book.getName());
-        if (book != null){
-            model.addAttribute("book", book);
-            if (book.getOwner() != null) model.addAttribute("person", book.getOwner());
-            else model.addAttribute("person", new Person());
-        }
-        else model.addAttribute("book", new Book());
+    public String searchPage(){
+        return "books/search";
+    }
 
+    @PostMapping("/search")
+    public String makeSearch(@RequestParam("query") String query, Model model){
+        model.addAttribute("books", booksService.findByName(query));
         return "books/search";
     }
     @GetMapping("/new")
