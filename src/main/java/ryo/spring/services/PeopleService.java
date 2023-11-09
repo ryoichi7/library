@@ -29,12 +29,12 @@ public class PeopleService {
     }
 
     public Person findOne(int id){
-        Person person = peopleRepository.findById(id).orElse(null); //n + 1 queries issue
+        Person person = peopleRepository.findById(id).orElse(null);
         if (person != null) {
             Hibernate.initialize(person.getBooks());
             for (Book book : person.getBooks()){
                 Date currentTime = new Date();
-                currentTime.setTime(currentTime.getTime() - 864000);
+                currentTime.setTime(currentTime.getTime() - (long) 8.64e+8);
                 book.setExpired(currentTime.after(book.getTakenAt()));
             }
         }
