@@ -1,1 +1,5 @@
 rootProject.name = 'library'
+
+include "web"
+include "service"
+include "dao"
