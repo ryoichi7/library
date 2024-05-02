@@ -2,6 +2,7 @@ package ru.ryoichi.service.dto.book;
 
 import lombok.Builder;
 import lombok.Value;
+import org.springframework.web.multipart.MultipartFile;
 import ru.ryoichi.service.dto.user.UserReadDto;
 
 import java.time.Instant;
@@ -17,4 +18,5 @@ public class BookDto {
     Instant createdAt;
     Instant updatedAt;
     UserReadDto user;
+    MultipartFile file;
 }

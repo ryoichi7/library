@@ -9,8 +9,9 @@ public class BookFilter {
     String title;
     String description;
     String author;
+    Boolean showPrivate;
     Boolean isCreatedBefore;
     Instant createdAt;
     Boolean isUpdatedBefore;
-    Instant updateAt;
+    Instant updatedAt;
 }

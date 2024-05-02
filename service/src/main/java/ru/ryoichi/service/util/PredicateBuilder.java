@@ -18,12 +18,20 @@ public class PredicateBuilder {
         }
         return this;
     }
+    public PredicateBuilder add(Predicate predicate) {
+        predicates.add(predicate);
+        return this;
+    }
 
     public Predicate build() {
-        return ExpressionUtils.allOf(predicates);
+        var predicate = ExpressionUtils.allOf(predicates);
+        predicates.clear();
+        return predicate;
     }
 
     public Predicate buildOr() {
-        return ExpressionUtils.anyOf(predicates);
+        var predicate = ExpressionUtils.anyOf(predicates);
+        predicates.clear();
+        return predicate;
     }
 }

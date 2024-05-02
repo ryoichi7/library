@@ -1,6 +1,7 @@
 package ru.ryoichi.service.core;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Predicate;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -33,13 +34,7 @@ public class UserService {
     private final UserCreateEditMapper userCreateEditMapper;
 
     public Page<UserReadDto> findAll(UserFilter filter, Pageable pageable) {
-        var mayBePredicate = predicateBuilder
-                .add(filter.getUsername(), user.username::containsIgnoreCase)
-                .add(filter.getCreatedAt(),
-                        filter.getIsCreatedBefore().equals(Boolean.TRUE) ? user.createdAt::before : user.createdAt::after)
-                .add(filter.getUpdatedAt(),
-                        filter.getIsUpdatedBefore().equals(Boolean.TRUE) ? user.updatedAt::before : user.updatedAt::after)
-                .build();
+        var mayBePredicate = getMayBePredicate(filter);
 
         var predicate = ofNullable(mayBePredicate).orElseGet(() -> new BooleanBuilder().and(QUser.user.isNotNull()));
 
@@ -49,7 +44,7 @@ public class UserService {
                 .map(userReadMapper::mapFrom);
     }
 
-    public UserReadDto findById(Integer id) {
+    public UserReadDto findById(int id) {
         return userRepository.findById(id)
                 .map(userReadMapper::mapFrom)
                 .orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
@@ -73,10 +68,20 @@ public class UserService {
     }
 
     @Transactional
-    public void delete(Integer id) {
+    public void delete(int id) {
         userRepository.findById(id)
                 .ifPresentOrElse(userRepository::delete, () -> {
                     throw new DataChangeException("Failed to delete user with id " + id);
                 });
+    }
+
+    private Predicate getMayBePredicate(UserFilter filter) {
+        return predicateBuilder
+                .add(filter.getUsername(), user.username::containsIgnoreCase)
+                .add(filter.getCreatedAt(), ofNullable(filter.getIsCreatedBefore())
+                        .orElse(false) ? user.createdAt::before : user.createdAt::after)
+                .add(filter.getUpdatedAt(), ofNullable(filter.getIsUpdatedBefore())
+                        .orElse(false) ? user.updatedAt::before : user.updatedAt::after)
+                .build();
     }
 }
