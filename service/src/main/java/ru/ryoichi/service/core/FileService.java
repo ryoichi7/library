@@ -18,29 +18,37 @@ import static java.nio.file.StandardOpenOption.*;
 @RequiredArgsConstructor
 public class FileService {
 
-    @Value("app.book.bucket")
+    @Value("${app.file.bucket}")
     private final String bucket;
     private final BookRepository bookRepository;
 
     @SneakyThrows
-    public void upload(int bookId, MultipartFile file) {
+    public String upload(int bookId, MultipartFile file) {
         if (!bookRepository.existsById(bookId)) {
             throw new DataChangeException("Failed to upload book because no book with id " + bookId + " found");
         }
-        var path = Path.of(bucket, String.valueOf(bookId), file.getOriginalFilename());
-        Files.createDirectories(path.getParent());
-        Files.write(path, file.getBytes(), CREATE, TRUNCATE_EXISTING);
+        var path = "/" + bookId + "/" + file.getOriginalFilename();
+        var fullPath = Path.of(bucket, path);
+        Files.createDirectories(fullPath.getParent());
+        Files.write(fullPath, file.getBytes(), CREATE, TRUNCATE_EXISTING);
+        return path;
     }
 
     @SneakyThrows
     public ByteArrayInputStream download(int bookId, String path) {
-        if (!bookRepository.existsById(bookId)) {
+        var fullPath = Path.of(bucket, path);
+        if (!Files.exists(fullPath)) {
             throw new DataChangeException("Failed to download book file because no book with id " + bookId + " found");
         }
-        return new ByteArrayInputStream(Files.readAllBytes(Path.of(bucket, path)));
+        return new ByteArrayInputStream(Files.readAllBytes(fullPath));
     }
 
+    @SneakyThrows
     public void delete(String path) {
-
+        var fullPath = Path.of(bucket, path);
+        if (!Files.exists(fullPath)) {
+            throw new DataChangeException("Failed to delete book file because no book on path" + fullPath + " found");
+        }
+        Files.delete(fullPath);
     }
 }

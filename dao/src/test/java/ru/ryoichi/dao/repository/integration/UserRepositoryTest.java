@@ -1,5 +1,6 @@
 package ru.ryoichi.dao.repository.integration;
 
+import lombok.RequiredArgsConstructor;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,9 +13,9 @@ import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@RequiredArgsConstructor
 class UserRepositoryTest extends IntegrationTestBase {
 
-    @Autowired
     private UserRepository userRepository;
     @Test
     public void checkCreate() {

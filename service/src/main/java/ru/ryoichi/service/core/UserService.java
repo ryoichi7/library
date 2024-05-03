@@ -10,11 +10,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.ryoichi.dao.entity.QUser;
 import ru.ryoichi.dao.repository.UserRepository;
+import ru.ryoichi.service.dto.user.UserContext;
 import ru.ryoichi.service.dto.user.UserCreateEditDto;
 import ru.ryoichi.service.dto.user.UserFilter;
 import ru.ryoichi.service.dto.user.UserReadDto;
 import ru.ryoichi.service.exception.DataChangeException;
 import ru.ryoichi.service.exception.DuplicateEntityException;
+import ru.ryoichi.service.exception.UserAccessDeniedException;
 import ru.ryoichi.service.mapper.user.UserCreateEditMapper;
 import ru.ryoichi.service.mapper.user.UserReadMapper;
 import ru.ryoichi.service.util.PredicateBuilder;
@@ -57,20 +59,30 @@ public class UserService {
     }
 
     @Transactional
-    public UserReadDto save(UserCreateEditDto userCreateEditDto) {
+    public UserReadDto create(UserCreateEditDto userCreateEditDto) {
         if (userCreateEditDto.getId() != null && userRepository.existsById(userCreateEditDto.getId())) {
             throw new DuplicateEntityException("User with id " + userCreateEditDto.getId() + " already exists");
         }
-        var user = userCreateEditMapper.mapTo(userCreateEditDto);
-        return of(userRepository.save(user))
-                .map(userReadMapper::mapFrom)
-                .orElseThrow(() -> new DataChangeException("Failed to save user"));
+        return saveUser(userCreateEditDto);
     }
 
     @Transactional
-    public void delete(int id) {
+    public UserReadDto update(UserCreateEditDto userCreateEditDto, UserContext userContext) {
+        if (!userCreateEditDto.getId().equals(userContext.getUserId()) && !userContext.getIsAdmin()) {
+            throw new UserAccessDeniedException("User with id " + userCreateEditDto.getId() + " can't be reached");
+        }
+        return saveUser(userCreateEditDto);
+    }
+
+    @Transactional
+    public void delete(int id, UserContext userContext) {
         userRepository.findById(id)
-                .ifPresentOrElse(userRepository::delete, () -> {
+                .ifPresentOrElse(entity -> {
+                    if (id != userContext.getUserId() && !userContext.getIsAdmin()) {
+                        throw new UserAccessDeniedException("User with id " + id + " can't be reached");
+                    }
+                    userRepository.delete(entity);
+                }, () -> {
                     throw new DataChangeException("Failed to delete user with id " + id);
                 });
     }
@@ -83,5 +95,12 @@ public class UserService {
                 .add(filter.getUpdatedAt(), ofNullable(filter.getIsUpdatedBefore())
                         .orElse(false) ? user.updatedAt::before : user.updatedAt::after)
                 .build();
+    }
+
+    private UserReadDto saveUser(UserCreateEditDto userCreateEditDto) {
+        var user = userCreateEditMapper.mapTo(userCreateEditDto);
+        return of(userRepository.save(user))
+                .map(userReadMapper::mapFrom)
+                .orElseThrow(() -> new DataChangeException("Failed to save user"));
     }
 }

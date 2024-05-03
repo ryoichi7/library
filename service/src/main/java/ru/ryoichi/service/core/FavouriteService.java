@@ -12,7 +12,11 @@ import ru.ryoichi.dao.repository.BookRepository;
 import ru.ryoichi.dao.repository.FavouriteRepository;
 import ru.ryoichi.dao.repository.UserRepository;
 import ru.ryoichi.service.dto.book.BookDto;
+import ru.ryoichi.service.dto.user.UserContext;
 import ru.ryoichi.service.dto.user.UserReadDto;
+import ru.ryoichi.service.exception.BookAccessDeniedException;
+import ru.ryoichi.service.exception.DataChangeException;
+import ru.ryoichi.service.exception.DuplicateEntityException;
 import ru.ryoichi.service.mapper.book.BookMapper;
 import ru.ryoichi.service.mapper.user.UserReadMapper;
 
@@ -58,26 +62,29 @@ public class FavouriteService {
     }
 
     @Transactional
-    public boolean follow(int userId, int bookId) {
+    public void follow(int userId, int bookId, UserContext userContext) {
         if (favouriteRepository.existsByUserIdAndBookId(userId, bookId)) {
-            return false;
+            throw new DuplicateEntityException("Book with id " + bookId + " is already being followed by user with id " + userId);
         }
+
         var user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User with id " + userId + " not found"));
         var book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new EntityNotFoundException("Book with id " + bookId + " not found"));
-        var favourite = new Favourite(new FavouriteId(userId, bookId), user, book);
 
-        favouriteRepository.save(favourite);
-        return true;
+        if (book.getVisible() || book.getUser().getId().equals(userContext.getUserId()) || userContext.getIsAdmin()) {
+            var favourite = new Favourite(new FavouriteId(userId, bookId), user, book);
+            favouriteRepository.save(favourite);
+            return;
+        }
+        throw new BookAccessDeniedException("Book with id " + bookId + " can't be reached");
     }
 
     @Transactional
-    public boolean unfollow(int userId, int bookId) {
+    public void unfollow(int userId, int bookId) {
         if (!favouriteRepository.existsByUserIdAndBookId(userId, bookId)) {
-            return false;
+            throw new DataChangeException("Book with id " + bookId + "is already not being followed by user with id " + userId);
         }
         favouriteRepository.deleteByUserIdAndBookId(userId, bookId);
-        return true;
     }
 }

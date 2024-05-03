@@ -18,5 +18,4 @@ public class BookDto {
     Instant createdAt;
     Instant updatedAt;
     UserReadDto user;
-    MultipartFile file;
 }

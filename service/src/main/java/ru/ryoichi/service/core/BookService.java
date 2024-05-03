@@ -9,14 +9,19 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import ru.ryoichi.dao.entity.Book;
 import ru.ryoichi.dao.repository.BookRepository;
 import ru.ryoichi.dao.repository.UserRepository;
 import ru.ryoichi.service.dto.book.BookDto;
 import ru.ryoichi.service.dto.book.BookFilter;
+import ru.ryoichi.service.dto.book.FileDto;
 import ru.ryoichi.service.dto.user.UserContext;
+import ru.ryoichi.service.exception.BookAccessDeniedException;
 import ru.ryoichi.service.exception.DataChangeException;
 import ru.ryoichi.service.mapper.book.BookMapper;
 import ru.ryoichi.service.util.PredicateBuilder;
+
+import java.io.ByteArrayInputStream;
 
 import static java.util.Optional.ofNullable;
 import static ru.ryoichi.dao.entity.QBook.book;
@@ -42,49 +47,74 @@ public class BookService {
                 .map(bookMapper::mapFrom);
     }
 
-    public BookDto findById(int id) {
-        return bookRepository.findById(id)
+    public BookDto findById(int id, UserContext userContext) {
+        var bookDto = bookRepository.findById(id)
                 .map(bookMapper::mapFrom)
                 .orElseThrow(() -> new EntityNotFoundException("Book with id " + id + " not found"));
+        if (bookDto.getVisible() || bookDto.getUser().getId().equals(userContext.getUserId()) || userContext.getIsAdmin()) {
+            return bookDto;
+        }
+        throw new BookAccessDeniedException("Book with id " + id + " can't be reached");
+    }
+
+    public ByteArrayInputStream getFileById(int id, UserContext userContext) {
+        var book = bookRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Book with id " + id + " not found"));
+        if (book.getVisible() || book.getUser().getId().equals(userContext.getUserId()) || userContext.getIsAdmin()) {
+            return fileService.download(book.getId(), book.getPath());
+        }
+        throw new BookAccessDeniedException("Book with id " + id + " can't be reached");
+    }
+
+    public void uploadFile(FileDto fileDto, UserContext userContext) {
+        var book = bookRepository.findById(fileDto.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Book with id " + fileDto.getId() + " not found"));
+        if (book.getVisible() || book.getUser().getId().equals(userContext.getUserId()) || userContext.getIsAdmin()) {
+            var path = fileService.upload(fileDto.getId(), fileDto.getFile());
+            book.setPath(path);
+            bookRepository.save(book);
+            return;
+        }
+        throw new BookAccessDeniedException("Book with id " + fileDto.getId() + " can't be reached");
     }
 
     @Transactional(propagation = Propagation.REQUIRED)
-    public BookDto create(int userId, BookDto bookDto) {
+    public BookDto create(BookDto bookDto, UserContext userContext) {
+        var userId = userContext.getUserId();
         var user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User with id " + userId + " not found"));
         var book = bookMapper.mapTo(bookDto);
-//        book.setPath();
         user.addBook(book);
 
-        var saved = bookRepository.save(book);
-//        fileService.upload(saved.getId(), bookDto.getFile());
-
-        return bookMapper.mapFrom(book);
+        return bookMapper.mapFrom(bookRepository.save(book));
     }
 
     @Transactional(propagation = Propagation.REQUIRED)
-    public BookDto update(BookDto bookDto) {
+    public BookDto update(BookDto bookDto, UserContext userContext) {
         if (!bookRepository.existsById(bookDto.getId())) {
             throw new DataChangeException("Failed to update book");
         }
+        if (!bookDto.getUser().getId().equals(userContext.getUserId()) && !userContext.getIsAdmin()) {
+            throw new BookAccessDeniedException("Book with id " + bookDto.getId() + " can't be reached");
+        }
         var book = bookMapper.mapTo(bookDto);
 
-        var saved = bookRepository.save(book);
-//        fileService.upload(saved.getId(), bookDto.getFile());
-
-        return bookMapper.mapFrom(saved);
+        return bookMapper.mapFrom(bookRepository.save(book));
     }
 
     @Transactional(propagation = Propagation.REQUIRED)
-    public void delete(int id) {
+    public void delete(int id, UserContext userContext) {
         bookRepository.findById(id).ifPresentOrElse(
-                        book -> {
-//                            fileService.delete()
-                            bookRepository.delete(book);
-                        },
-                        () -> {
-                            throw new DataChangeException("Failed to delete user with id " + id);
-                        });
+                book -> {
+                    if (!book.getUser().getId().equals(userContext.getUserId()) && !userContext.getIsAdmin()) {
+                        throw new BookAccessDeniedException("Book with id " + book.getId() + " can't be reached");
+                    }
+                    fileService.delete(book.getPath());
+                    bookRepository.delete(book);
+                },
+                () -> {
+                    throw new DataChangeException("Failed to delete user with id " + id);
+                });
     }
 
     private Predicate getMayBePredicate(BookFilter filter, UserContext userContext) {
